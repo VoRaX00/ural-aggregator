@@ -141,14 +141,14 @@
     <repositories>
         <repository>
             <id>github</id>
-            <url>https://maven.pkg.github.com/Tehno-R/*</url>
+            <url>https://maven.pkg.github.com/VoRaX00/*</url>
         </repository>
     </repositories>
 
     <distributionManagement>
         <repository>
             <id>github</id>
-            <url>https://maven.pkg.github.com/Tehno-R/ural-aggregator-CI-test</url>
+            <url>https://maven.pkg.github.com/VoRaX00/ural-common-starter-v2</url>
         </repository>
     </distributionManagement>
 
