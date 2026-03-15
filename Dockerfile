@@ -1,7 +1,7 @@
-FROM eclipse-temurin:21-jre
+FROM eclipse-temurin:21-jre-alpine
 
 WORKDIR /app
-COPY ural-aggregator-service/target/*.jar service.jar
+COPY *-service/target/*.jar service.jar
 
 EXPOSE 8080
 
