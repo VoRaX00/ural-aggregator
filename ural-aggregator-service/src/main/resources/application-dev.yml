@@ -16,7 +16,7 @@ proxy:
   users:
     url: http://localhost:10904
   auth:
-    url: http://localhost:10901
+    url: http://localhost:10906
 
 logging:
   level:

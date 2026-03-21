@@ -59,7 +59,7 @@ public abstract class ProxyService {
                 log.error("{} error: {}", this.getClass().getName(), e.getMessage(), e);
             }
 
-            return new ResponseEntity<>(e.getResponseBodyAsString(), e.getStatusCode());
+            return new ResponseEntity<>(e.getResponseBodyAsByteArray(), e.getStatusCode());
         }
     }
 

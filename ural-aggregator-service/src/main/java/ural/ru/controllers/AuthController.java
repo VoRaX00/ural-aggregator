@@ -3,6 +3,7 @@ package ural.ru.controllers;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -28,6 +29,15 @@ public class AuthController extends AbstractCommonController {
         return sendAndReceive(body, method, request);
     }
 
+    @PostMapping("/registration")
+    ResponseEntity<?> registration(
+            @RequestBody(required = false) byte[] body,
+            HttpMethod method,
+            HttpServletRequest request
+    ) {
+        return sendAndReceive(body, method, request);
+    }
+
     @PostMapping("/refresh")
     ResponseEntity<?> refresh(
             @RequestBody(required = false) byte[] body,
@@ -37,6 +47,7 @@ public class AuthController extends AbstractCommonController {
         return sendAndReceive(body, method, request);
     }
 
+    @PreAuthorize("hasAnyRole('URAL_ANY')")
     @PostMapping("/logout")
     ResponseEntity<?> logout(
             @RequestBody(required = false) byte[] body,
@@ -46,6 +57,7 @@ public class AuthController extends AbstractCommonController {
         return sendAndReceive(body, method, request);
     }
 
+    @PreAuthorize("hasAnyRole('URAL_ANY')")
     @PostMapping("/logout/all")
     ResponseEntity<?> logoutAll(
             @RequestBody(required = false) byte[] body,
