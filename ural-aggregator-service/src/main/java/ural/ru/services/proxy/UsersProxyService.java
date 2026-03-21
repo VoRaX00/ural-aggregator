@@ -9,7 +9,7 @@ import ural.ru.properties.proxy.UsersProperty;
 
 import java.net.URI;
 
-@Service
+@Service("usersProxyService")
 public class UsersProxyService extends ProxyService {
 
     protected UsersProxyService(RestTemplate restTemplate, UsersProperty usersProperty) {
