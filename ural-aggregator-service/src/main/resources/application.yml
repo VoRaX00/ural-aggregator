@@ -11,12 +11,19 @@ security:
     public-key: ${PUBLIC_KEY}
 
 proxy:
-  cargo:
-    url: ${PROXY_CARGO_URL}
-  users:
-    url: ${PROXY_USERS_URL}
   auth:
     url: ${PROXY_AUTH_URL}
+  users:
+    url: ${PROXY_USERS_URL}
+  cars:
+    url: ${PROXY_CARS_URL}
+  cargo:
+    url: ${PROXY_CARGO_URL}
+  contracts:
+    url: ${PROXY_CONTRACTS_URL}
+
+front:
+  url: ${FRONT_URL}
 
 logging:
   level:

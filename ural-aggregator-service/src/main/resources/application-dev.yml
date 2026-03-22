@@ -22,6 +22,9 @@ proxy:
   contracts:
     url: http://localhost:10906/api
 
+front:
+  url: http://localhost:3000
+
 logging:
   level:
     root: info

@@ -16,10 +16,15 @@ import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import ru.ural.configs.AllowedUrls;
 import ru.ural.decoders.NoVerifyJwtDecoder;
 import ru.ural.filters.ExceptionFilterHandler;
+import ural.ru.properties.FrontProperty;
 
+import java.util.List;
 import java.util.Optional;
 
 @Slf4j
@@ -35,6 +40,8 @@ public class SecurityConfig {
 
     private final Optional<JwtDecoder> verifyJwtDecoder;
 
+    private final FrontProperty frontProperty;
+
     @Bean
     public SecurityFilterChain securityFilterChain(
             HttpSecurity http,
@@ -48,6 +55,7 @@ public class SecurityConfig {
 
         return http
                 .csrf(AbstractHttpConfigurer::disable)
+                .cors(cors -> {})
                 .sessionManagement(sessionManagementConfigurer ->
                         sessionManagementConfigurer.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .oauth2ResourceServer(resourceServerConfigurer ->
@@ -60,6 +68,30 @@ public class SecurityConfig {
                 .authorizeHttpRequests(this::authorizeHttpRequests)
                 .addFilterBefore(exceptionFilterHandler, UsernamePasswordAuthenticationFilter.class)
                 .build();
+    }
+
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration config = new CorsConfiguration();
+
+        config.setAllowedOrigins(List.of(
+                frontProperty.getUrl()
+        ));
+
+        config.setAllowedMethods(List.of(
+                "GET", "POST", "PUT", "DELETE"
+        ));
+
+        config.setAllowedHeaders(List.of("*"));
+        config.setAllowCredentials(true);
+        config.setExposedHeaders(List.of(
+                "Authorization"
+        ));
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", config);
+
+        return source;
     }
 
     private void authorizeHttpRequests(
