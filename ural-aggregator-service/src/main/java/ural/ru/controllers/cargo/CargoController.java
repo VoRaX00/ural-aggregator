@@ -22,25 +22,50 @@ public class CargoController extends AbstractCommonController {
 
     @PreAuthorize("hasAnyRole('USER')")
     @PostMapping
-    public ResponseEntity<?> create(byte[] body, HttpMethod method, HttpServletRequest request) {
+    public ResponseEntity<?> create(
+            @RequestBody(required = false) byte[] body,
+            HttpMethod method,
+            HttpServletRequest request
+    ) {
         return sendAndReceive(body, method, request);
     }
 
     @PreAuthorize("hasAnyRole('USER,ADMIN')")
     @PutMapping("/{id}")
-    public ResponseEntity<?> update(byte[] body, HttpMethod method, HttpServletRequest request) {
+    public ResponseEntity<?> update(
+            @RequestBody(required = false) byte[] body,
+            HttpMethod method,
+            HttpServletRequest request
+    ) {
         return sendAndReceive(body, method, request);
     }
 
     @PreAuthorize("hasAnyRole('URAL_ANY')")
     @GetMapping
-    public ResponseEntity<?> getPaginatedList(byte[] body, HttpMethod method, HttpServletRequest request) {
+    public ResponseEntity<?> getPaginatedList(
+            @RequestBody(required = false) byte[] body,
+            HttpMethod method,
+            HttpServletRequest request
+    ) {
+        return sendAndReceive(body, method, request);
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<?> getById(
+            @RequestBody(required = false) byte[] body,
+            HttpMethod method,
+            HttpServletRequest request
+    ) {
         return sendAndReceive(body, method, request);
     }
 
     @PreAuthorize("hasAnyRole('USER,ADMIN,UNDERWRITER')")
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> delete(byte[] body, HttpMethod method, HttpServletRequest request) {
+    public ResponseEntity<?> delete(
+            @RequestBody(required = false) byte[] body,
+            HttpMethod method,
+            HttpServletRequest request
+    ) {
         return sendAndReceive(body, method, request);
     }
 

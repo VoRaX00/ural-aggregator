@@ -11,12 +11,16 @@ security:
     public-key: ${PUBLIC_KEY}
 
 proxy:
-  cargo:
-    url: http://localhost:10903
-  users:
-    url: http://localhost:10904
   auth:
-    url: http://localhost:10906
+    url: http://localhost:10901/api
+  users:
+    url: http://localhost:10903/api
+  cars:
+    url: http://localhost:10904/api
+  cargo:
+    url: http://localhost:10905/api
+  contracts:
+    url: http://localhost:10906/api
 
 logging:
   level:

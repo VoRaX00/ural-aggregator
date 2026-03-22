@@ -1,9 +1,10 @@
-package ural.ru.controllers.users;
+package ural.ru.controllers.contracts;
 
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import ural.ru.controllers.AbstractCommonController;
 import ural.ru.services.proxy.ProxyService;
@@ -11,16 +12,17 @@ import ural.ru.services.proxy.ProxyService;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/users")
-@Tag(name = "Контроллер для управления пользователями")
-public class UserController extends AbstractCommonController {
+@RequestMapping("/contracts")
+@Tag(name = "Контроллер для управления контрактами")
+public class ContractController extends AbstractCommonController {
 
-    protected UserController(Map<String, ProxyService> proxyServiceMap) {
+    protected ContractController(Map<String, ProxyService> proxyServiceMap) {
         super(proxyServiceMap);
     }
 
-    @PostMapping("/registration")
-    public ResponseEntity<?> registration(
+    @PreAuthorize("hasAnyRole('URAL_ANY')")
+    @GetMapping("/{id}")
+    public ResponseEntity<?> getById(
             @RequestBody(required = false) byte[] body,
             HttpMethod method,
             HttpServletRequest request
@@ -28,18 +30,10 @@ public class UserController extends AbstractCommonController {
         return sendAndReceive(body, method, request);
     }
 
-    @GetMapping("/{uuid}")
-    public ResponseEntity<?> getByUuid(
-            @RequestBody(required = false) byte[] body,
-            HttpMethod method,
-            HttpServletRequest request
-    ) {
-        return sendAndReceive(body, method, request);
-    }
-
-    @PutMapping("/{uuid}")
-    public ResponseEntity<?> update(
-            @RequestBody(required = false) byte[] body,
+    @PreAuthorize("hasAnyRole('USER, ADMIN')")
+    @PostMapping
+    public ResponseEntity<?> create(
+            @RequestBody byte[] body,
             HttpMethod method,
             HttpServletRequest request
     ) {
@@ -48,7 +42,6 @@ public class UserController extends AbstractCommonController {
 
     @Override
     protected String getProxyServiceName() {
-        return "usersProxyService";
+        return "contractProxyService";
     }
-
 }

@@ -1,45 +1,28 @@
-package ural.ru.controllers;
+package ural.ru.controllers.cars;
 
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+import ural.ru.controllers.AbstractCommonController;
 import ural.ru.services.proxy.ProxyService;
 
 import java.util.Map;
 
 @RestController
-@RequestMapping(value = "/auth")
-public class AuthController extends AbstractCommonController {
+@RequestMapping("/cars")
+@Tag(name = "Контроллер для управления машинами")
+public class CarController extends AbstractCommonController {
 
-    protected AuthController(Map<String, ProxyService> proxyServiceMap) {
+    protected CarController(Map<String, ProxyService> proxyServiceMap) {
         super(proxyServiceMap);
     }
 
-    @PostMapping("/login")
-    public ResponseEntity<?> login(
-            @RequestBody(required = false) byte[] body,
-            HttpMethod method,
-            HttpServletRequest request
-    ) {
-        return sendAndReceive(body, method, request);
-    }
-
-    @PostMapping("/registration")
-    public ResponseEntity<?> registration(
-            @RequestBody(required = false) byte[] body,
-            HttpMethod method,
-            HttpServletRequest request
-    ) {
-        return sendAndReceive(body, method, request);
-    }
-
-    @PostMapping("/refresh-tokens")
-    public ResponseEntity<?> refresh(
+    @PreAuthorize("hasAnyRole('URAL_ANY')")
+    @PostMapping
+    public ResponseEntity<?> create(
             @RequestBody(required = false) byte[] body,
             HttpMethod method,
             HttpServletRequest request
@@ -48,8 +31,8 @@ public class AuthController extends AbstractCommonController {
     }
 
     @PreAuthorize("hasAnyRole('URAL_ANY')")
-    @PostMapping("/logout")
-    public ResponseEntity<?> logout(
+    @GetMapping("/by-vin/{vin}")
+    public ResponseEntity<?> getByVin(
             @RequestBody(required = false) byte[] body,
             HttpMethod method,
             HttpServletRequest request
@@ -58,8 +41,38 @@ public class AuthController extends AbstractCommonController {
     }
 
     @PreAuthorize("hasAnyRole('URAL_ANY')")
-    @PostMapping("/logout/all")
-    public ResponseEntity<?> logoutAll(
+    @GetMapping("/{id}")
+    public ResponseEntity<?> getById(
+            @RequestBody(required = false) byte[] body,
+            HttpMethod method,
+            HttpServletRequest request
+    ) {
+        return sendAndReceive(body, method, request);
+    }
+
+    @PreAuthorize("hasAnyRole('URAL_ANY')")
+    @GetMapping
+    public ResponseEntity<?> getByFilters(
+            @RequestBody(required = false) byte[] body,
+            HttpMethod method,
+            HttpServletRequest request
+    ) {
+        return sendAndReceive(body, method, request);
+    }
+
+    @PreAuthorize("hasAnyRole('USER, ADMIN')")
+    @PutMapping("/{id}")
+    public ResponseEntity<?> update(
+            @RequestBody(required = false) byte[] body,
+            HttpMethod method,
+            HttpServletRequest request
+    ) {
+        return sendAndReceive(body, method, request);
+    }
+
+    @PreAuthorize("hasAnyRole('USER, ADMIN')")
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> deleteById(
             @RequestBody(required = false) byte[] body,
             HttpMethod method,
             HttpServletRequest request
@@ -69,6 +82,6 @@ public class AuthController extends AbstractCommonController {
 
     @Override
     protected String getProxyServiceName() {
-        return "authProxyService";
+        return "carProxyService";
     }
 }
