@@ -3,19 +3,27 @@ package ural.ru.services.proxy;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.util.UriComponentsBuilder;
 import ural.ru.properties.proxy.ProxyProperty;
 
+import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Enumeration;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Slf4j
@@ -63,14 +71,92 @@ public abstract class ProxyService {
         }
     }
 
+    public ResponseEntity<?> upload(List<MultipartFile> files, List<String> types, HttpServletRequest request) {
+        URI uri = UriComponentsBuilder.fromUriString(proxyProperty.getUrl())
+                .path("/files")
+                .build(true)
+                .toUri();
+
+        HttpHeaders headers = new HttpHeaders();
+        Enumeration<String> headerNames = request.getHeaderNames();
+        while (headerNames.hasMoreElements()) {
+            String headerName = headerNames.nextElement();
+            headers.set(headerName, request.getHeader(headerName));
+        }
+
+        headers.remove(HttpHeaders.ACCEPT_ENCODING);
+        headers.remove(HttpHeaders.HOST);
+        headers.remove(HttpHeaders.CONTENT_LENGTH);
+        headers.setContentType(MediaType.MULTIPART_FORM_DATA);
+
+        MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
+
+        for (MultipartFile file : files) {
+            HttpHeaders fileHeaders = new HttpHeaders();
+            fileHeaders.setContentDispositionFormData("files", file.getOriginalFilename());
+            fileHeaders.setContentType(MediaType.parseMediaType(
+                    Optional.ofNullable(file.getContentType()).orElse(MediaType.APPLICATION_OCTET_STREAM_VALUE)
+            ));
+            body.add("files", new HttpEntity<>(new MultipartInputStreamFileResource(file), fileHeaders));
+        }
+
+        for (String type : types) {
+            body.add("types", type);
+        }
+
+        HttpEntity<MultiValueMap<String, Object>> requestEntity =
+                new HttpEntity<>(body, headers);
+
+        return restTemplate.exchange(uri, HttpMethod.POST, requestEntity, byte[].class);
+    }
+
+    private static class MultipartInputStreamFileResource extends InputStreamResource {
+
+        private final MultipartFile file;
+
+        private MultipartInputStreamFileResource(MultipartFile file) {
+            super(getInputStream(file));
+            this.file = file;
+        }
+
+        @Override
+        public String getFilename() {
+            return file.getOriginalFilename();
+        }
+
+        @Override
+        public long contentLength() {
+            return file.getSize();
+        }
+
+        private static InputStream getInputStream(MultipartFile file) {
+            try {
+                return file.getInputStream();
+            } catch (Exception e) {
+                throw new RuntimeException("Failed to read multipart file stream", e);
+            }
+        }
+    }
+
     protected URI buildURI(HttpServletRequest request) {
         try {
             URI base = new URI(proxyProperty.getUrl());
-            return UriComponentsBuilder.fromUri(base)
-                    .path(request.getRequestURI().substring(request.getContextPath().length()))
-                    .query(request.getQueryString())
-                    .build(true)
-                    .toUri();
+            UriComponentsBuilder builder = UriComponentsBuilder.fromUri(base)
+                    .path(request.getRequestURI().substring(request.getContextPath().length()));
+
+            for (Map.Entry<String, String[]> entry : request.getParameterMap().entrySet()) {
+                String[] values = entry.getValue();
+                if (values == null || values.length == 0) {
+                    builder.queryParam(entry.getKey());
+                    continue;
+                }
+
+                for (String value : values) {
+                    builder.queryParam(entry.getKey(), value);
+                }
+            }
+
+            return builder.build(true).toUri();
         } catch (URISyntaxException e) {
             log.error("Error with create uri for proxy on cargo-service");
             throw new RuntimeException(e);

@@ -1,5 +1,6 @@
 package ural.ru.controllers.contracts;
 
+import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpMethod;
@@ -23,6 +24,26 @@ public class ContractController extends AbstractCommonController {
     @PreAuthorize("hasAnyRole('URAL_ANY')")
     @GetMapping("/{id}")
     public ResponseEntity<?> getById(
+            @RequestBody(required = false) byte[] body,
+            HttpMethod method,
+            HttpServletRequest request
+    ) {
+        return sendAndReceive(body, method, request);
+    }
+
+    @PreAuthorize("hasAnyRole('URAL_ANY')")
+    @GetMapping
+    public ResponseEntity<?> getByPaginationList(
+            @RequestBody(required = false) byte[] body,
+            HttpMethod method,
+            HttpServletRequest request
+    ) {
+        return sendAndReceive(body, method, request);
+    }
+
+    @Operation(summary = "Изменить контракт")
+    @PutMapping("/{id}")
+    ResponseEntity<?> edit(
             @RequestBody(required = false) byte[] body,
             HttpMethod method,
             HttpServletRequest request

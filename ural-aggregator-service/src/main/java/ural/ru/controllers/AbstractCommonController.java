@@ -5,8 +5,10 @@ import lombok.Getter;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 import ural.ru.services.proxy.ProxyService;
 
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -26,6 +28,10 @@ public abstract class AbstractCommonController {
             HttpServletRequest httpServletRequest
     ) {
         return proxyService.processProxyRequest(body, httpMethod, httpServletRequest);
+    }
+
+    protected ResponseEntity<?> upload(List<MultipartFile> files, List<String> types, HttpServletRequest request) {
+        return proxyService.upload(files, types, request);
     }
 
     protected abstract String getProxyServiceName();

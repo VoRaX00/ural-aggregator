@@ -21,6 +21,8 @@ proxy:
     url: http://localhost:10905/api
   contracts:
     url: http://localhost:10906/api
+  files:
+    url: http://localhost:10907/api
 
 front:
   url: http://localhost:3000
