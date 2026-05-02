@@ -21,6 +21,8 @@ proxy:
     url: ${PROXY_CARGO_URL}
   contracts:
     url: ${PROXY_CONTRACTS_URL}
+  files:
+    url: ${PROXY_FILE_URL}
 
 front:
   url: ${FRONT_URL}
