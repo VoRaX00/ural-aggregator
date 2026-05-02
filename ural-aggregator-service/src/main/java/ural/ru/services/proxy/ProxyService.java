@@ -3,6 +3,7 @@ package ural.ru.services.proxy;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -18,6 +19,7 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.util.UriComponentsBuilder;
 import ural.ru.properties.proxy.ProxyProperty;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -77,27 +79,12 @@ public abstract class ProxyService {
                 .build(true)
                 .toUri();
 
-        HttpHeaders headers = new HttpHeaders();
-        Enumeration<String> headerNames = request.getHeaderNames();
-        while (headerNames.hasMoreElements()) {
-            String headerName = headerNames.nextElement();
-            headers.set(headerName, request.getHeader(headerName));
-        }
-
-        headers.remove(HttpHeaders.ACCEPT_ENCODING);
-        headers.remove(HttpHeaders.HOST);
-        headers.remove(HttpHeaders.CONTENT_LENGTH);
-        headers.setContentType(MediaType.MULTIPART_FORM_DATA);
+        HttpHeaders headers = createMultipartHeaders(request);
 
         MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
 
         for (MultipartFile file : files) {
-            HttpHeaders fileHeaders = new HttpHeaders();
-            fileHeaders.setContentDispositionFormData("files", file.getOriginalFilename());
-            fileHeaders.setContentType(MediaType.parseMediaType(
-                    Optional.ofNullable(file.getContentType()).orElse(MediaType.APPLICATION_OCTET_STREAM_VALUE)
-            ));
-            body.add("files", new HttpEntity<>(new MultipartInputStreamFileResource(file), fileHeaders));
+            body.add("files", createFilePart("files", file));
         }
 
         for (String type : types) {
@@ -108,6 +95,82 @@ public abstract class ProxyService {
                 new HttpEntity<>(body, headers);
 
         return restTemplate.exchange(uri, HttpMethod.POST, requestEntity, byte[].class);
+    }
+
+    public ResponseEntity<?> uploadAvatar(MultipartFile file, String metadata, HttpServletRequest request) {
+        URI uri = UriComponentsBuilder.fromUriString(proxyProperty.getUrl())
+                .path("/files/avatar")
+                .build(true)
+                .toUri();
+
+        HttpHeaders headers = createMultipartHeaders(request);
+
+        HttpHeaders metadataHeaders = new HttpHeaders();
+        metadataHeaders.setContentType(MediaType.APPLICATION_JSON);
+
+        MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
+        body.add("file", createRepeatableFilePart("file", file));
+        body.add("metadata", new HttpEntity<>(metadata, metadataHeaders));
+
+        HttpEntity<MultiValueMap<String, Object>> requestEntity =
+                new HttpEntity<>(body, headers);
+
+        return restTemplate.exchange(uri, HttpMethod.POST, requestEntity, byte[].class);
+    }
+
+    private HttpHeaders createMultipartHeaders(HttpServletRequest request) {
+        HttpHeaders headers = new HttpHeaders();
+        Enumeration<String> headerNames = request.getHeaderNames();
+        while (headerNames.hasMoreElements()) {
+            String headerName = headerNames.nextElement();
+            headers.set(headerName, request.getHeader(headerName));
+        }
+
+        headers.remove(HttpHeaders.ACCEPT_ENCODING);
+        headers.remove(HttpHeaders.CONNECTION);
+        headers.remove(HttpHeaders.TRANSFER_ENCODING);
+        headers.remove(HttpHeaders.HOST);
+        headers.remove(HttpHeaders.CONTENT_LENGTH);
+        headers.setContentType(MediaType.MULTIPART_FORM_DATA);
+
+        return headers;
+    }
+
+    private HttpEntity<MultipartInputStreamFileResource> createFilePart(String name, MultipartFile file) {
+        HttpHeaders fileHeaders = new HttpHeaders();
+        fileHeaders.setContentDispositionFormData(name, file.getOriginalFilename());
+        fileHeaders.setContentType(MediaType.parseMediaType(
+                Optional.ofNullable(file.getContentType()).orElse(MediaType.APPLICATION_OCTET_STREAM_VALUE)
+        ));
+        return new HttpEntity<>(new MultipartInputStreamFileResource(file), fileHeaders);
+    }
+
+    private HttpEntity<ByteArrayResource> createRepeatableFilePart(String name, MultipartFile file) {
+        HttpHeaders fileHeaders = new HttpHeaders();
+        fileHeaders.setContentDispositionFormData(name, file.getOriginalFilename());
+        fileHeaders.setContentType(MediaType.parseMediaType(
+                Optional.ofNullable(file.getContentType()).orElse(MediaType.APPLICATION_OCTET_STREAM_VALUE)
+        ));
+        try {
+            return new HttpEntity<>(new MultipartByteArrayResource(file), fileHeaders);
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to read multipart file bytes", e);
+        }
+    }
+
+    private static class MultipartByteArrayResource extends ByteArrayResource {
+
+        private final MultipartFile file;
+
+        private MultipartByteArrayResource(MultipartFile file) throws IOException {
+            super(file.getBytes());
+            this.file = file;
+        }
+
+        @Override
+        public String getFilename() {
+            return file.getOriginalFilename();
+        }
     }
 
     private static class MultipartInputStreamFileResource extends InputStreamResource {

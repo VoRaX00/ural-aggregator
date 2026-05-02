@@ -34,6 +34,10 @@ public abstract class AbstractCommonController {
         return proxyService.upload(files, types, request);
     }
 
+    protected ResponseEntity<?> uploadAvatar(MultipartFile file, String metadata, HttpServletRequest request) {
+        return proxyService.uploadAvatar(file, metadata, request);
+    }
+
     protected abstract String getProxyServiceName();
 
 }
